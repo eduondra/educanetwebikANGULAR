@@ -7,6 +7,11 @@ public class User {
     private String username;
     private String password;
     private String email;
+    private int id;
+
+    public User(){
+
+    }
 
     public User(String firstName, String lastName, String username, String password, String email) {
         this.firstname= firstName;
@@ -22,6 +27,21 @@ public class User {
 
     public String getPassword() {
         return password;
+    }
+    public int getId() {
+        return id;
+    }
+
+
+    public String setUsername(String username) {
+        return this.username = username;
+    }
+
+    public String setPassword(String password) {
+        return this.password = password;
+    }
+    public int setId(int id) {
+        return this.id = id;
     }
 
 

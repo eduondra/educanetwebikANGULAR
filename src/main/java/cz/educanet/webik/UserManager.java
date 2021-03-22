@@ -1,44 +1,48 @@
 package cz.educanet.webik;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @ApplicationScoped
 public class UserManager {
 
-    private ArrayList<User> userList = new ArrayList<User>();
+    @Inject
+    private LogManager loginManager;
 
-    public boolean existByUsername(String username) {
-        for (User user : userList) {
-            if (user.getUsername().equals(username)) {
-                return true;
-            }
-        }
-        return false;
+    private ArrayList<User> userList = new ArrayList<>();
+
+    public ArrayList<User> getUsers() {
+        return userList;
     }
 
-
-    public void save(User tempUser) {
-        userList.add(tempUser);
-
+    public boolean createUser(User user) {
+        user.setId(userList.size());
+        return userList.add(user);
     }
 
-    public User getUserByUsernameAndPassword(String username, String password) {
-
-
-        for (int i = 0; i < userList.size(); i++) {
-            if (userList.get(i).getUsername().equals(username) && (userList.get(i).getPassword().equals(password))) {
-
-                return userList.get(i);
-            }
-        }
+    public UserToken checkUser(User user) {
+        Optional<User> tempUser = userList.stream()
+                .filter(u -> u.getUsername().equals(user.getUsername()))
+                .findFirst();
+        if (tempUser.isPresent() && Objects.equals(tempUser.get().getPassword(), user.getPassword()))
+            return loginManager.createToken();
         return null;
     }
 
-    public ArrayList<User> getAllUsers() {
+    public User getUserById(int id) {
+        return userList.stream()
+                .filter(userListStream -> id == userListStream.getId())
+                .findAny()
+                .orElse(null);
+    }
 
-        return userList;
+    public boolean deleteUserById(int id) {
+
+        return userList.remove(id) != null;
     }
 
 }

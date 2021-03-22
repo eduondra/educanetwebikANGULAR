@@ -5,76 +5,61 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-@Path("users")
+@Path("/users")
 @Produces(MediaType.APPLICATION_JSON)
 
 public class UsersResource {
 
     @Inject
     private UserManager userManager;
-
-
     @Inject
-    private LogManager logManager;
+    private LogManager loginManager;
 
-    @Path ("/register")
-    @POST
-    public Response register(
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getUsers(UserToken token) {
 
-            @FormParam("firstName") String firstName,
-            @FormParam("lastName") String lastName,
-            @FormParam("username") String username,
-            @FormParam("password") String password,
-            @FormParam("email") String email
-
-    ) {
-        User tempUser = new User(firstName, lastName, username, password, email);
-
-        if (userManager.existByUsername(username)) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("tento uživatel už existuje").build();
-        } else {
-            userManager.save(tempUser);
-            return Response.ok("uživatel se úšpěšně zaregistroval").build();
-        }
-    }
-    @Path ("/login")
-    @POST
-    public Response login(
-            @FormParam("username") String username,
-            @FormParam("password") String password
-
-    ) {
-        User temp = userManager.getUserByUsernameAndPassword(username, password);
-
-        if (temp == null) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("Blbý username nebo password").build();
-        } else {
-            logManager.logInUser = temp;
-            return Response.ok("uživatel se úšpěšně přihlásil").build();
-        }
-    }
-    @Path ("/logout")
-    @DELETE
-    public Response logout() {
-        logManager.logInUser = null;
-        return Response.ok("uživatel se odhlásil").build();
-    }
-
-
-    @Path ("/user")
-    @GET 
-    public Response getCurrentUser() {
-        if (logManager.logInUser == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).build();
-        } else {
-            return Response.ok(logManager.logInUser.getUsername()).build();
-        }
-
+        return Response.ok(userManager.getUsers()).build();
     }
 
     @GET
-    public Response getAllUsers(){
-        return Response.ok(userManager.getAllUsers()).build();
+    @Path("{id}")
+    public Response getUser(UserToken token, @PathParam("id") int id) {
+
+        return  Response.ok(userManager.getUserById(id)).build();
+
+    }
+
+    @POST
+    @Path("/register")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response createUser(User user) {
+        if (!userManager.createUser(user))
+            return Response.status(400).build();
+        return Response.ok(user).build();
+    }
+
+    @POST
+    @Path("/login")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response loginUser(User user){
+        UserToken token = userManager.checkUser(user);
+        if (token == null)
+            return Response.status(404).build();
+        return Response.ok(token).build();
+    }
+
+    @DELETE
+    @Path("{id}")
+    public Response deleteUser(@PathParam("id") int id) {
+        if (userManager.deleteUserById(id)) {
+            return Response.ok().build();
+        } else {
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
     }
 
 }
